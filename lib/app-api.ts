@@ -83,17 +83,6 @@ export class AppApi extends Construct {
       entry: "./lambdas/auth/authorizer.ts",
     });
 
-    const requestAuthorizer = new apig.RequestAuthorizer(
-      this,
-      "RequestAuthorizer",
-      {
-        identitySources: [apig.IdentitySource.header("cookie")],
-        handler: authorizerFn,
-        resultsCacheTtl: cdk.Duration.minutes(0),
-      }
-    );
-
-    // Functions 
     const getReviewsByMovieIdFn = new lambdanode.NodejsFunction(this, "GetReviewsByMovieIdFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -105,8 +94,20 @@ export class AppApi extends Construct {
         REGION: 'eu-west-1',
       },
     });
-    
-    
+
+    const requestAuthorizer = new apig.RequestAuthorizer(
+      this,
+      "RequestAuthorizer",
+      {
+        identitySources: [apig.IdentitySource.header("cookie")],
+        handler: authorizerFn,
+        resultsCacheTtl: cdk.Duration.minutes(0),
+      }
+      );
+      
+    // Permissions
+    movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
+
     protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
@@ -114,7 +115,5 @@ export class AppApi extends Construct {
     
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
     
-    // Permissions
-    movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
   }
 }

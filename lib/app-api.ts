@@ -114,6 +114,6 @@ export class AppApi extends Construct {
     });
     
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
-    
+    publicRes.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
   }
 }

@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as node from "aws-cdk-lib/aws-lambda-nodejs";
 
 type AppApiProps = {
@@ -62,23 +63,24 @@ export class AppApi extends Construct {
       },
     };
 
+    // Functions
     const protectedRes = appApi.root.addResource("protected");
 
     const publicRes = appApi.root.addResource("public");
 
     const protectedFn = new node.NodejsFunction(this, "ProtectedFn", {
       ...appCommonFnProps,
-      entry: "./lambda/protected.ts",
+      entry: "./lambdas/protected.ts",
     });
 
     const publicFn = new node.NodejsFunction(this, "PublicFn", {
       ...appCommonFnProps,
-      entry: "./lambda/public.ts",
+      entry: "./lambdas/public.ts",
     });
 
     const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {
       ...appCommonFnProps,
-      entry: "./lambda/auth/authorizer.ts",
+      entry: "./lambdas/auth/authorizer.ts",
     });
 
     const requestAuthorizer = new apig.RequestAuthorizer(
@@ -91,6 +93,19 @@ export class AppApi extends Construct {
       }
     );
 
+    // Functions 
+    const getReviewsByMovieIdFn = new lambdanode.NodejsFunction(this, "GetReviewsByMovieIdFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/getReviewsByMovieId.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+    
     protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,

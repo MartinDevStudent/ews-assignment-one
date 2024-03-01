@@ -41,15 +41,7 @@ export class AppApi extends Construct {
       sortKey: { name: "rating", type: dynamodb.AttributeType.NUMBER },
     });
 
-    // REST API
-    const appApi = new apig.RestApi(this, "AppApi", {
-      description: "App RestApi",
-      endpointTypes: [apig.EndpointType.REGIONAL],
-      defaultCorsPreflightOptions: {
-        allowOrigins: apig.Cors.ALL_ORIGINS,
-      },
-    });
-
+    // Functions
     const appCommonFnProps = {
       architecture: lambda.Architecture.ARM_64,
       timeout: cdk.Duration.seconds(10),
@@ -62,11 +54,6 @@ export class AppApi extends Construct {
         REGION: cdk.Aws.REGION,
       },
     };
-
-    // Functions
-    const protectedRes = appApi.root.addResource("protected");
-
-    const publicRes = appApi.root.addResource("public");
 
     const protectedFn = new node.NodejsFunction(this, "ProtectedFn", {
       ...appCommonFnProps,
@@ -95,25 +82,36 @@ export class AppApi extends Construct {
       },
     });
 
-    const requestAuthorizer = new apig.RequestAuthorizer(
-      this,
-      "RequestAuthorizer",
-      {
-        identitySources: [apig.IdentitySource.header("cookie")],
-        handler: authorizerFn,
-        resultsCacheTtl: cdk.Duration.minutes(0),
-      }
-      );
+    const requestAuthorizer = new apig.RequestAuthorizer(this, "RequestAuthorizer", {
+      identitySources: [apig.IdentitySource.header("cookie")],
+      handler: authorizerFn,
+      resultsCacheTtl: cdk.Duration.minutes(0),
+    });
       
     // Permissions
     movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
 
+    // REST API
+    const appApi = new apig.RestApi(this, "AppApi", {
+      description: "App RestApi",
+      endpointTypes: [apig.EndpointType.REGIONAL],
+      defaultCorsPreflightOptions: {
+        allowOrigins: apig.Cors.ALL_ORIGINS,
+      },
+    });
+
+    const protectedRes = appApi.root.addResource("protected");
     protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
     
+    const publicRes = appApi.root.addResource("public");
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
-    publicRes.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
+
+    const moviesEndpoint = appApi.root.addResource("movies");
+
+    const movieEndpoint = moviesEndpoint.addResource("{movieId}");
+    movieEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
   }
 }

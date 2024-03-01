@@ -22,6 +22,7 @@
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.354.0",
     "@types/aws-lambda": "^8.10.106",
+    "@aws-sdk/lib-dynamodb": "^3.79.0",
     "aws-cdk-lib": "2.88.0",
     "axios": "^1.1.2",
     "ajv": "^8.12.0",

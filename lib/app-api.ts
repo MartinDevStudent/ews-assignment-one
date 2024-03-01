@@ -106,11 +106,15 @@ export class AppApi extends Construct {
       },
     });
     
+    
     protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
-
+    
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
+    
+    // Permissions
+    movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
   }
 }

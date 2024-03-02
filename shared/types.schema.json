@@ -17,6 +17,45 @@
             ],
             "type": "object"
         },
+        "MovieReview": {
+            "additionalProperties": false,
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "movieId": {
+                    "additionalProperties": false,
+                    "type": "object"
+                },
+                "rating": {
+                    "additionalProperties": false,
+                    "type": "object"
+                },
+                "reviewDate": {
+                    "type": "string"
+                },
+                "reviewerName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "content",
+                "movieId",
+                "rating",
+                "reviewDate",
+                "reviewerName"
+            ],
+            "type": "object"
+        },
+        "MovieReviewsQueryParams": {
+            "additionalProperties": false,
+            "properties": {
+                "minRating": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
         "SignInBody": {
             "additionalProperties": false,
             "properties": {

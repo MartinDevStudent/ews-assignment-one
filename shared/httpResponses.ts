@@ -34,3 +34,16 @@ export function ServerError(error: any): HttpResponse {
         body: JSON.stringify({ error }),
     };
 }
+
+export function SchemaError(schemaDefinition): HttpResponse {
+    return {
+        statusCode: 500,
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({
+            message: `Incorrect type. Must match Query parameters schema`,
+            schema: schemaDefinition,
+        }),
+    };
+}

@@ -22,3 +22,7 @@ export type MovieReview = {
   content: string;
   rating: Number;
 }
+
+export type MovieReviewsQueryParams = {
+  minRating?: number;
+}

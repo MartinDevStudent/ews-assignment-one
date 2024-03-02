@@ -20,13 +20,13 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
             return NotFound("Missing reviewer name");
         }
 
-        const movieReviews = await getMovieReviews(movieId, reviewerName);
+        const movieReview = await getMovieReview(movieId, reviewerName);
 
-        if (!movieReviews) {
+        if (!movieReview) {
             return NotFound("No movie reviews by specified reviewer found for the movie");
         }
       
-        return Ok(movieReviews);
+        return Ok(movieReview);
     } catch (error: any) {
         console.log(JSON.stringify(error));
 
@@ -34,7 +34,7 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
     }
 };
 
-async function getMovieReviews(movieId: number, reviewerName: string): Promise<MovieReview[] | undefined> {
+async function getMovieReview(movieId: number, reviewerName: string): Promise<MovieReview | undefined> {
     const commandInput = buildQueryCommandInput(movieId, reviewerName);
 
     const queryResponse = await sendQuery(commandInput);
@@ -42,7 +42,7 @@ async function getMovieReviews(movieId: number, reviewerName: string): Promise<M
     console.log("GetCommand response: ", queryResponse);
 
     return queryResponse.Items && queryResponse.Items.length > 0
-        ? queryResponse.Items as MovieReview[]
+        ? queryResponse.Items[0] as MovieReview
         : undefined;
 }
 

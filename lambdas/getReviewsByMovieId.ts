@@ -7,30 +7,29 @@ import { tryParseInt } from "../shared/parameterHelpers";
 import { createDDbDocClient } from "../shared/dynamoDbHelpers";
 
 import schema from "../shared/types.schema.json";
-import { validateQueryParmas as validateQueryParams } from "../shared/validator";
+import { isValidQueryParams } from "../shared/validator";
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);
 
     try {
-        const queryParams = event.queryStringParameters;
+        const queryParams = event?.queryStringParameters;
         const queryParamsTypeName = "MovieReviewsQueryParams";
-        const isValidQueryParams = validateQueryParams(queryParamsTypeName, queryParams);
         
-        const movieId = tryParseInt(event.pathParameters?.movieId);
+        const movieId = tryParseInt(event?.pathParameters?.movieId);
         const minRating = tryParseInt(queryParams?.minRating);
 
         if (!movieId) {
             return NotFound("Missing movie Id");
 
-        } else if (queryParams && !isValidQueryParams) {
+        } else if (queryParams && !isValidQueryParams(queryParamsTypeName, queryParams)) {
             return SchemaError(schema.definitions[queryParamsTypeName]);
         }
 
         const movieReviews = await getMovieReviews(movieId!, minRating);
 
         if (!movieReviews) {
-            return NotFound("Invalid movie Id");
+            return NotFound("Movie reviews with specified parameters not found");
         }
       
         return Ok(movieReviews);
@@ -52,7 +51,7 @@ async function getMovieReviews(movieId: number, minRating?: number): Promise<Mov
 
     console.log("GetCommand response: ", commandOutput);
 
-    return commandOutput.Items
+    return commandOutput.Items && commandOutput.Items.length > 0
         ? commandOutput.Items as MovieReview[]
         : undefined;
 }
@@ -67,6 +66,7 @@ function buildQueryCommandInput(movieId: number, minRating?: number): QueryComma
 
     return {
         TableName: process.env.TABLE_NAME,
+        IndexName: "ratingIx",
         KeyConditionExpression: keyConditionExpression,
         ExpressionAttributeValues: expressionAttributeValues
     };

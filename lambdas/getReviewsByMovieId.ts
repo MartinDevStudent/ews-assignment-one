@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-
 import { QueryCommand, QueryCommandInput, QueryCommandOutput } from "@aws-sdk/lib-dynamodb";
+
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, ServerError } from "../shared/httpResponses";
 import { getMovieIdParameter } from "../shared/parameterHelpers";
@@ -16,15 +16,13 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
             return NotFound("Missing movie Id" );
         }
 
-        const movieReview = await getMovieReview(movieId);
+        const movieReviews = await getMovieReviews(movieId);
 
-        console.log("movieReview", movieReview)
-
-        if (!movieReview) {
+        if (!movieReviews) {
             return NotFound("Invalid movie Id");
         }
       
-        return Ok(movieReview);
+        return Ok(movieReviews);
     } catch (error: any) {
         console.log(JSON.stringify(error));
 
@@ -32,7 +30,7 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
     }
 };
 
-async function getMovieReview(movieId: number): Promise<MovieReview | undefined> {
+async function getMovieReviews(movieId: number): Promise<MovieReview[] | undefined> {
     const ddbDocClient = createDDbDocClient(process.env.REGION);
 
     const commandInput = buildQueryCommandInput(movieId);
@@ -43,7 +41,7 @@ async function getMovieReview(movieId: number): Promise<MovieReview | undefined>
 
     console.log("GetCommand response: ", commandOutput);
 
-    return parseResponse(commandOutput);
+    return commandOutput.Items as MovieReview[];
 }
 
 function buildQueryCommandInput(movieId: number): QueryCommandInput {
@@ -54,11 +52,4 @@ function buildQueryCommandInput(movieId: number): QueryCommandInput {
             ":m": movieId,
         },
     };
-}
-
-function parseResponse(movieReviewsCommandOutput: QueryCommandOutput): MovieReview | undefined {
-    // if response contains movie review
-    return movieReviewsCommandOutput.Count && movieReviewsCommandOutput.Count > 0
-        ? movieReviewsCommandOutput.Items[0] as MovieReview
-        : undefined;
 }

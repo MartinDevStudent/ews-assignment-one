@@ -35,7 +35,7 @@ export function ServerError(error: any): HttpResponse {
     };
 }
 
-export function SchemaError(schemaDefinition): HttpResponse {
+export function SchemaError(schemaDefinition: any): HttpResponse {
     return {
         statusCode: 500,
         headers: {

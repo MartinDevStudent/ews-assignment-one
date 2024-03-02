@@ -1,10 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, ServerError } from "../shared/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
-import { createDDbDocClient } from "../shared/dynamoDbHelpers";
+import { sendQuery } from "../shared/dynamoDbHelpers";
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);
@@ -35,18 +35,14 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
 };
 
 async function getMovieReviews(movieId: number, reviewerName: string): Promise<MovieReview[] | undefined> {
-    const ddbDocClient = createDDbDocClient(process.env.REGION);
-
     const commandInput = buildQueryCommandInput(movieId, reviewerName);
 
-    const commandOutput = await ddbDocClient.send(
-        new QueryCommand(commandInput)
-    );
+    const queryResponse = await sendQuery(commandInput);
 
-    console.log("GetCommand response: ", commandOutput);
+    console.log("GetCommand response: ", queryResponse);
 
-    return commandOutput.Items && commandOutput.Items.length > 0
-        ? commandOutput.Items as MovieReview[]
+    return queryResponse.Items && queryResponse.Items.length > 0
+        ? queryResponse.Items as MovieReview[]
         : undefined;
 }
 

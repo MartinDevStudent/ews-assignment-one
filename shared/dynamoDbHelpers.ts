@@ -1,7 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
-export function createDDbDocClient(awsRegion: string | undefined): DynamoDBDocumentClient {
+function createDDbDocClient(awsRegion: string | undefined): DynamoDBDocumentClient {
     const ddbClient = new DynamoDBClient({ region: awsRegion });
     const marshallOptions = {
         convertEmptyValues: true,
@@ -14,4 +14,14 @@ export function createDDbDocClient(awsRegion: string | undefined): DynamoDBDocum
     const translateConfig = { marshallOptions, unmarshallOptions };
 
     return DynamoDBDocumentClient.from(ddbClient, translateConfig);
+}
+
+export async function sendQuery(commandInput: QueryCommandInput) {
+    const ddbDocClient = createDDbDocClient(process.env.REGION);
+
+    const commandOutput = await ddbDocClient.send(
+        new QueryCommand(commandInput)
+    );
+
+    return commandOutput;
 }

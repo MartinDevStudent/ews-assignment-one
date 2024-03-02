@@ -2,10 +2,13 @@ import { Aws } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
+import * as custom from "aws-cdk-lib/custom-resources";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as node from "aws-cdk-lib/aws-lambda-nodejs";
+import { movieReviews } from "../seed/movieReviews";
+import { generateBatch } from "../shared/util";
 
 type AppApiProps = {
   userPoolId: string;
@@ -39,6 +42,22 @@ export class AppApi extends Construct {
     movieReviewsTable.addLocalSecondaryIndex({
       indexName: "ratingIx",
       sortKey: { name: "rating", type: dynamodb.AttributeType.NUMBER },
+    });
+
+    new custom.AwsCustomResource(this, "movieReviewsddbInitData", {
+      onCreate: {
+        service: "DynamoDB",
+        action: "batchWriteItem",
+        parameters: {
+          RequestItems: {
+            [movieReviewsTable.tableName]: generateBatch(movieReviews),
+          },
+        },
+        physicalResourceId: custom.PhysicalResourceId.of("movieReviewsddbInitData"),
+      },
+      policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [movieReviewsTable.tableArn],
+      }),
     });
 
     // Functions
@@ -112,7 +131,7 @@ export class AppApi extends Construct {
     const moviesEndpoint = appApi.root.addResource("movies");
     const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
     const reviewsByMovieIdEndpoint = movieIdEndpoint.addResource("reviews");
-    
+
     reviewsByMovieIdEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
   }
 }

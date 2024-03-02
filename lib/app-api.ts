@@ -95,6 +95,18 @@ export class AppApi extends Construct {
       },
     });
 
+    const getReviewsByMovieIdAndReviewerNameFn = new lambdanode.NodejsFunction(this, "getReviewsByMovieIdAndReviewerNameFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/getReviewsByMovieIdAndReviewerName.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+
     const requestAuthorizer = new apig.RequestAuthorizer(this, "RequestAuthorizer", {
       identitySources: [apig.IdentitySource.header("cookie")],
       handler: authorizerFn,
@@ -103,6 +115,7 @@ export class AppApi extends Construct {
       
     // Permissions
     movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
+    movieReviewsTable.grantReadData(getReviewsByMovieIdAndReviewerNameFn)
 
     // REST API
     const appApi = new apig.RestApi(this, "AppApi", {
@@ -127,5 +140,9 @@ export class AppApi extends Construct {
     const reviewsByMovieIdEndpoint = movieIdEndpoint.addResource("reviews");
 
     reviewsByMovieIdEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
+
+    const reviewsOfMovieByReviewerEndpoint = reviewsByMovieIdEndpoint.addResource("{reviewerName}");
+
+    reviewsOfMovieByReviewerEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdAndReviewerNameFn));
   }
 }

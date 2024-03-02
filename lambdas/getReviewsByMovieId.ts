@@ -1,37 +1,33 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { QueryCommand, QueryCommandInput, QueryCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, SchemaError, ServerError } from "../shared/httpResponses";
-import { getMovieIdParameter } from "../shared/parameterHelpers";
+import { tryParseInt } from "../shared/parameterHelpers";
 import { createDDbDocClient } from "../shared/dynamoDbHelpers";
 
-import Ajv from "ajv";
 import schema from "../shared/types.schema.json";
-
-const ajv = new Ajv();
-const isValidQueryParams = ajv.compile(
-  schema.definitions["MovieReviewsQueryParams"] || {}
-);
+import { validateQueryParmas as validateQueryParams } from "../shared/validator";
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);
 
-    try {        
-        const movieId = getMovieIdParameter(event);
+    try {
+        const queryParams = event.queryStringParameters;
+        const queryParamsTypeName = "MovieReviewsQueryParams";
+        const isValidQueryParams = validateQueryParams(queryParamsTypeName, queryParams);
+        
+        const movieId = tryParseInt(event.pathParameters?.movieId);
+        const minRating = tryParseInt(queryParams?.minRating);
 
         if (!movieId) {
-            return NotFound("Missing movie Id" );
+            return NotFound("Missing movie Id");
+
+        } else if (queryParams && !isValidQueryParams) {
+            return SchemaError(schema.definitions[queryParamsTypeName]);
         }
 
-        const queryParams = event.queryStringParameters;
-        const minRating = queryParams?.minRating ? parseInt(queryParams.minRating) : undefined;
-
-        if (queryParams && !isValidQueryParams(queryParams)) {
-            return SchemaError(schema.definitions["MovieReviewsQueryParams"]);
-        }
-
-        const movieReviews = await getMovieReviews(movieId, minRating);
+        const movieReviews = await getMovieReviews(movieId!, minRating);
 
         if (!movieReviews) {
             return NotFound("Invalid movie Id");
@@ -56,7 +52,9 @@ async function getMovieReviews(movieId: number, minRating?: number): Promise<Mov
 
     console.log("GetCommand response: ", commandOutput);
 
-    return commandOutput.Items as MovieReview[];
+    return commandOutput.Items
+        ? commandOutput.Items as MovieReview[]
+        : undefined;
 }
 
 function buildQueryCommandInput(movieId: number, minRating?: number): QueryCommandInput {

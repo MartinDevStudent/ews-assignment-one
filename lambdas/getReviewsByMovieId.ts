@@ -1,84 +1,64 @@
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
 
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, QueryCommandInput, QueryCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { MovieReview } from "../shared/types";
+import { NotFound, Ok, ServerError } from "../shared/httpResponses";
+import { getMovieIdParameter } from "../shared/parameterHelpers";
+import { createDDbDocClient } from "../shared/dynamoDbHelpers";
 
-const ddbDocClient = createDDbDocClient();
+export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
+    console.log("Event: ", event);
 
-export const handler : APIGatewayProxyHandlerV2  = async function (event: any) {
-    try {
-        console.log("Event: ", event);
-        const parameters  = event?.pathParameters;
-
-        const movieId = parameters?.movieId ? parseInt(parameters.movieId) : undefined;
+    try {        
+        const movieId = getMovieIdParameter(event);
 
         if (!movieId) {
-            return {
-              statusCode: 404,
-              headers: {
-                "content-type": "application/json",
-              },
-              body: JSON.stringify({ Message: "Missing movie Id" }),
-            };
+            return NotFound("Missing movie Id" );
         }
 
-        let commandInput: QueryCommandInput = {
-            TableName: process.env.TABLE_NAME,
-            KeyConditionExpression: "movieId = :m",
-            ExpressionAttributeValues: {
-            ":m": movieId,
-            },
-        };
+        const movieReview = await getMovieReview(movieId);
 
-        const movieReviewsCommandOutput = await ddbDocClient.send(
-            new QueryCommand(commandInput)
-        );
+        console.log("movieReview", movieReview)
 
-        console.log("GetCommand response: ", movieReviewsCommandOutput);
-
-        if (movieReviewsCommandOutput.Items?.length === 0) {
-            return {
-              statusCode: 404,
-              headers: {
-                "content-type": "application/json",
-              },
-              body: JSON.stringify({ Message: "Invalid movie Id" }),
-            };
+        if (!movieReview) {
+            return NotFound("Invalid movie Id");
         }
-
-        let body = {
-            data: movieReviewsCommandOutput.Items[0]
-        };
       
-        return {
-            statusCode: 200,
-            headers: {
-              "content-type": "application/json",
-            },
-            body: JSON.stringify(body),
-        };
+        return Ok(movieReview);
     } catch (error: any) {
         console.log(JSON.stringify(error));
-        return {
-        statusCode: 500,
-        headers: {
-            "content-type": "application/json",
-        },
-        body: JSON.stringify({ error }),
-        };
+
+        return ServerError(error);
     }
 };
 
-function createDDbDocClient() {
-    const ddbClient = new DynamoDBClient({ region: process.env.REGION });
-    const marshallOptions = {
-      convertEmptyValues: true,
-      removeUndefinedValues: true,
-      convertClassInstanceToMap: true,
+async function getMovieReview(movieId: number): Promise<MovieReview | undefined> {
+    const ddbDocClient = createDDbDocClient(process.env.REGION);
+
+    const commandInput = buildQueryCommandInput(movieId);
+
+    const commandOutput = await ddbDocClient.send(
+        new QueryCommand(commandInput)
+    );
+
+    console.log("GetCommand response: ", commandOutput);
+
+    return parseResponse(commandOutput);
+}
+
+function buildQueryCommandInput(movieId: number): QueryCommandInput {
+    return {
+        TableName: process.env.TABLE_NAME,
+        KeyConditionExpression: "movieId = :m",
+        ExpressionAttributeValues: {
+            ":m": movieId,
+        },
     };
-    const unmarshallOptions = {
-      wrapNumbers: false,
-    };
-    const translateConfig = { marshallOptions, unmarshallOptions };
-    return DynamoDBDocumentClient.from(ddbClient, translateConfig);
-  }
+}
+
+function parseResponse(movieReviewsCommandOutput: QueryCommandOutput): MovieReview | undefined {
+    // if response contains movie review
+    return movieReviewsCommandOutput.Count && movieReviewsCommandOutput.Count > 0
+        ? movieReviewsCommandOutput.Items[0] as MovieReview
+        : undefined;
+}

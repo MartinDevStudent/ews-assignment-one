@@ -110,8 +110,9 @@ export class AppApi extends Construct {
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
     const moviesEndpoint = appApi.root.addResource("movies");
-
-    const movieEndpoint = moviesEndpoint.addResource("{movieId}");
-    movieEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
+    const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
+    const reviewsByMovieIdEndpoint = movieIdEndpoint.addResource("reviews");
+    
+    reviewsByMovieIdEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
   }
 }

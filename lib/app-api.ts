@@ -19,12 +19,6 @@ export class AppApi extends Construct {
   constructor(scope: Construct, id: string, props: AppApiProps) {
     super(scope, id);
 
-    // MovieId (Partition key) - Number
-    // ReviewerName - String (a username).
-    // ReviewDate - String, e.g. "2023-10-20".
-    // Content - String (the review text).
-    // Rating - Number (integer; range 1-5)
-
     // Table
     const movieReviewsTable = new dynamodb.Table(this, "MovieReviewsTable", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -35,7 +29,7 @@ export class AppApi extends Construct {
     });
 
     movieReviewsTable.addLocalSecondaryIndex({
-      indexName: "reviewIx",
+      indexName: "reviewDateIx",
       sortKey: { name: "reviewDate", type: dynamodb.AttributeType.STRING },
     });
 

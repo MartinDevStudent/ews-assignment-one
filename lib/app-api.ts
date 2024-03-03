@@ -36,6 +36,7 @@ export class AppApi extends Construct {
       },
       indexName: "some-index",
     });
+
     movieReviewsTable.addLocalSecondaryIndex({
       indexName: "reviewDateIx",
       sortKey: { name: "reviewDate", type: dynamodb.AttributeType.STRING },
@@ -158,6 +159,18 @@ export class AppApi extends Construct {
       }
     );
 
+    const postReviewFn = new lambdanode.NodejsFunction(this, "postReviewFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/postReview.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: "eu-west-1",
+      },
+    });
+
     const requestAuthorizer = new apig.RequestAuthorizer(
       this,
       "RequestAuthorizer",
@@ -173,6 +186,8 @@ export class AppApi extends Construct {
     movieReviewsTable.grantReadData(getAMoviesReviewsByReviewerNameOrYearFn);
     movieReviewsTable.grantReadData(getReviewersReviewsFn);
     movieReviewsTable.grantReadData(getTranslationFn);
+    movieReviewsTable.grantReadData(postReviewFn);
+    movieReviewsTable.grantWriteData(postReviewFn);
 
     const translatePolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -205,6 +220,7 @@ export class AppApi extends Construct {
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
     const moviesEndpoint = appApi.root.addResource("movies");
+    moviesEndpoint.addMethod("POST", new apig.LambdaIntegration(postReviewFn));
 
     const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
 

@@ -12,7 +12,7 @@ import {
 } from "../shared/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { getItem } from "../shared/dynamoDbHelpers";
-import { isValidQueryParams } from "../shared/validator";
+import { isValid } from "../shared/validator";
 import schema from "../shared/types.schema.json";
 import {
   TranslateTextRequest,
@@ -37,10 +37,7 @@ export const handler: APIGatewayProxyHandlerV2 = async function (
       return NotFound("You have not provided a valid reviewer name");
     } else if (!movieId) {
       return NotFound("Missing movie Id");
-    } else if (
-      queryParams &&
-      !isValidQueryParams(queryParamsTypeName, queryParams)
-    ) {
+    } else if (queryParams && !isValid(queryParamsTypeName, queryParams)) {
       return SchemaError(schema.definitions[queryParamsTypeName]);
     }
 

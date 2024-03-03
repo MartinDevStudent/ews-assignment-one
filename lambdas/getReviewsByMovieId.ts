@@ -12,7 +12,7 @@ import { tryParseInt } from "../shared/parameterHelpers";
 import { sendQuery } from "../shared/dynamoDbHelpers";
 
 import schema from "../shared/types.schema.json";
-import { isValidQueryParams } from "../shared/validator";
+import { isValid } from "../shared/validator";
 
 export const handler: APIGatewayProxyHandlerV2 = async function (
   event: APIGatewayProxyEventV2
@@ -28,10 +28,7 @@ export const handler: APIGatewayProxyHandlerV2 = async function (
 
     if (!movieId) {
       return NotFound("Missing movie Id");
-    } else if (
-      queryParams &&
-      !isValidQueryParams(queryParamsTypeName, queryParams)
-    ) {
+    } else if (queryParams && !isValid(queryParamsTypeName, queryParams)) {
       return SchemaError(schema.definitions[queryParamsTypeName]);
     }
 

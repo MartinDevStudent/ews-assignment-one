@@ -15,11 +15,11 @@ export type SignInBody = {
 };
 
 export type MovieReview = {
-  movieId: Number;
+  movieId: number;
   reviewerName: string;
   reviewDate: string;
   content: string;
-  rating: Number;
+  rating: number;
 };
 
 export type MovieReviewsQueryParams = {

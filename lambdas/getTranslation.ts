@@ -1,12 +1,16 @@
+import * as AWS from "aws-sdk";
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { GetCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
-import { NotFound, Ok, SchemaError, ServerError } from "../shared/httpResponses";
+import { BadRequest, NotFound, Ok, SchemaError, ServerError } from "../shared/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { getItem } from "../shared/dynamoDbHelpers";
 import { isValidQueryParams } from "../shared/validator";
 import schema from "../shared/types.schema.json";
+import { TranslateTextRequest, TranslateTextResponse } from "aws-sdk/clients/translate";
+
+const translate = new AWS.Translate();
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);
@@ -32,9 +36,18 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
 
         if (!movieReview) {
             return NotFound("No movie review found for the specified movied id/ reviewer name");
+
+        } else if (!movieReview.content) {
+            return BadRequest("Unable to translate as movie review has no content");
         }
+        
+        const language = queryParams!.language!;
+        const translatedConetent = await getTranslatedReview(movieReview.content, language);
       
-        return Ok(movieReview);
+        return Ok({
+            ...movieReview,
+            content: translatedConetent
+        });
     } catch (error: any) {
         console.log(JSON.stringify(error));
 
@@ -59,3 +72,19 @@ function buildGetItemCommandInput(movieId: number, reviewerName: string): GetCom
         Key: { movieId: movieId, reviewerName: reviewerName },
     }
 };
+
+async function getTranslatedReview(review: string, language: string): Promise<string> {
+    const translateParams = buildTranslateParams(review, language);
+
+    const translationResponse: TranslateTextResponse = await translate.translateText(translateParams).promise();
+
+    return translationResponse.TranslatedText;
+}
+
+function buildTranslateParams(text: string, language: string): TranslateTextRequest {
+    return {
+        Text: text,
+        SourceLanguageCode: 'en',
+        TargetLanguageCode: language,
+    };
+}

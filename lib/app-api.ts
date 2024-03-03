@@ -10,6 +10,8 @@ import * as node from "aws-cdk-lib/aws-lambda-nodejs";
 import { movieReviews } from "../seed/movieReviews";
 import { generateBatch } from "../shared/util";
 
+import * as iam from 'aws-cdk-lib/aws-iam';
+
 type AppApiProps = {
   userPoolId: string;
   userPoolClientId: string;
@@ -149,6 +151,18 @@ export class AppApi extends Construct {
     movieReviewsTable.grantReadData(getAMoviesReviewsByReviewerNameOrYearFn)
     movieReviewsTable.grantReadData(getReviewersReviewsFn)
     movieReviewsTable.grantReadData(getTranslationFn)
+
+    const translatePolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW, 
+      actions: ['translate:*'],
+      resources: ['*'],
+    });
+
+    getTranslationFn.role?.attachInlinePolicy(
+      new iam.Policy(this, 'translate-policy', {
+        statements: [translatePolicy],
+      }),
+    );
 
     // REST API
     const appApi = new apig.RestApi(this, "AppApi", {

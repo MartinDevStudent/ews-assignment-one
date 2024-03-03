@@ -126,6 +126,18 @@ export class AppApi extends Construct {
       },
     });
 
+    const getTranslationFn = new lambdanode.NodejsFunction(this, "getTranslationFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/getTranslation.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: 'eu-west-1',
+      },
+    });
+
     const requestAuthorizer = new apig.RequestAuthorizer(this, "RequestAuthorizer", {
       identitySources: [apig.IdentitySource.header("cookie")],
       handler: authorizerFn,
@@ -136,6 +148,7 @@ export class AppApi extends Construct {
     movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
     movieReviewsTable.grantReadData(getAMoviesReviewsByReviewerNameOrYearFn)
     movieReviewsTable.grantReadData(getReviewersReviewsFn)
+    movieReviewsTable.grantReadData(getTranslationFn)
 
     // REST API
     const appApi = new apig.RestApi(this, "AppApi", {
@@ -169,5 +182,10 @@ export class AppApi extends Construct {
 
       const reviewerNameEndpoint = reviewsEndpoint.addResource("{reviewerName}");
         reviewerNameEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewersReviewsFn));
+      
+        const reviewerNameThenMovieIdEndpoint = reviewerNameEndpoint.addResource("{movieId}");
+
+          const translationEndpoint = reviewerNameThenMovieIdEndpoint.addResource("translation");
+            translationEndpoint.addMethod("GET", new apig.LambdaIntegration(getTranslationFn));      
   }
 }

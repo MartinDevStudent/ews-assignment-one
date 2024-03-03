@@ -26,3 +26,7 @@ export type MovieReview = {
 export type MovieReviewsQueryParams = {
   minRating?: number;
 }
+
+export type TranslationQueryParams = {
+  language: string;
+}

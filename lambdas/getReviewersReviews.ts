@@ -1,9 +1,9 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { QueryCommandInput, ScanCommandInput } from "@aws-sdk/lib-dynamodb";
+import { ScanCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, ServerError } from "../shared/httpResponses";
-import { scan, sendQuery } from "../shared/dynamoDbHelpers";
+import { scan } from "../shared/dynamoDbHelpers";
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);

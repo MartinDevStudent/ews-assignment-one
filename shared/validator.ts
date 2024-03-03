@@ -3,14 +3,12 @@ import schema from "../shared/types.schema.json";
 import { APIGatewayProxyEventQueryStringParameters } from "aws-lambda";
 
 export function isValidQueryParams(
-    queryParamsTypeName: string,
-    queryParams: APIGatewayProxyEventQueryStringParameters | undefined
+  queryParamsTypeName: string,
+  queryParams: APIGatewayProxyEventQueryStringParameters | undefined
 ) {
-    const ajv = new Ajv({ coerceTypes: true });
+  const ajv = new Ajv({ coerceTypes: true });
 
-    const isValid = ajv.compile(
-        schema.definitions[queryParamsTypeName] || {}
-    );
+  const isValid = ajv.compile(schema.definitions[queryParamsTypeName] || {});
 
-    return isValid(queryParams);
+  return isValid(queryParams);
 }

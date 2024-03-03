@@ -11,7 +11,9 @@ import schema from "../../shared/types.schema.json";
 const ajv = new Ajv();
 const isValidBodyParams = ajv.compile(schema.definitions["SignUpBody"] || {});
 
-const client = new CognitoIdentityProviderClient({ region:  process.env.REGION  });
+const client = new CognitoIdentityProviderClient({
+  region: process.env.REGION,
+});
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {

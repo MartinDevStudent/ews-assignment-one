@@ -13,6 +13,9 @@ import {
   ScanCommand,
   ScanCommandInput,
   ScanCommandOutput,
+  UpdateCommand,
+  UpdateCommandInput,
+  UpdateCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient(process.env.REGION);
@@ -34,12 +37,6 @@ function createDDbDocClient(
   return DynamoDBDocumentClient.from(ddbClient, translateConfig);
 }
 
-export async function send(
-  commandInput: PutCommandInput
-): Promise<PutCommandOutput> {
-  return await ddbDocClient.send(new PutCommand(commandInput));
-}
-
 export async function sendQuery(
   commandInput: QueryCommandInput
 ): Promise<QueryCommandOutput> {
@@ -56,4 +53,16 @@ export async function scan(
   commandInput: ScanCommandInput
 ): Promise<ScanCommandOutput> {
   return await ddbDocClient.send(new ScanCommand(commandInput));
+}
+
+export async function sendCreate(
+  commandInput: PutCommandInput
+): Promise<PutCommandOutput> {
+  return await ddbDocClient.send(new PutCommand(commandInput));
+}
+
+export async function sendUpdate(
+  commandInput: UpdateCommandInput
+): Promise<UpdateCommandOutput> {
+  return await ddbDocClient.send(new UpdateCommand(commandInput));
 }

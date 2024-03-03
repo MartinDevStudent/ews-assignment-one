@@ -36,3 +36,7 @@ export type CreateMovieReviewRequest = {
   content: string;
   rating: number;
 };
+
+export type UpdateMovieReviewRequest = {
+  content: string;
+};

@@ -171,6 +171,18 @@ export class AppApi extends Construct {
       },
     });
 
+    const putReviewFn = new lambdanode.NodejsFunction(this, "putReviewFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: `${__dirname}/../lambdas/putReview.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: "eu-west-1",
+      },
+    });
+
     const requestAuthorizer = new apig.RequestAuthorizer(
       this,
       "RequestAuthorizer",
@@ -188,6 +200,8 @@ export class AppApi extends Construct {
     movieReviewsTable.grantReadData(getTranslationFn);
     movieReviewsTable.grantReadData(postReviewFn);
     movieReviewsTable.grantWriteData(postReviewFn);
+    movieReviewsTable.grantReadData(putReviewFn);
+    movieReviewsTable.grantWriteData(putReviewFn);
 
     const translatePolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -235,6 +249,10 @@ export class AppApi extends Construct {
     aMoviesReviewsByReviewerNameOrYearEndpoint.addMethod(
       "GET",
       new apig.LambdaIntegration(getAMoviesReviewsByReviewerNameOrYearFn)
+    );
+    aMoviesReviewsByReviewerNameOrYearEndpoint.addMethod(
+      "PUT",
+      new apig.LambdaIntegration(putReviewFn)
     );
 
     const reviewsEndpoint = appApi.root.addResource("reviews");

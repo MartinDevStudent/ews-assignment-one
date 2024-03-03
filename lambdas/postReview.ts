@@ -5,7 +5,7 @@ import { isValid } from "../shared/validator";
 import schema from "../shared/types.schema.json";
 import { MovieReview } from "../shared/types";
 import { PutCommandInput, PutCommandOutput } from "@aws-sdk/lib-dynamodb";
-import { send } from "../shared/dynamoDbHelpers";
+import { sendCreate } from "../shared/dynamoDbHelpers";
 
 export const handler: APIGatewayProxyHandlerV2 = async function (
   event: APIGatewayProxyEventV2
@@ -14,10 +14,10 @@ export const handler: APIGatewayProxyHandlerV2 = async function (
 
   try {
     const body = event.body ? JSON.parse(event.body) : undefined;
-    const movieReviewRequestTypeName = "CreateMovieReviewRequest";
+    const requestTypeName = "CreateMovieReviewRequest";
 
-    if (body && !isValid(movieReviewRequestTypeName, body)) {
-      return SchemaError(schema.definitions[movieReviewRequestTypeName]);
+    if (body && !isValid(requestTypeName, body)) {
+      return SchemaError(schema.definitions[requestTypeName]);
     }
 
     const movieReview = {
@@ -46,16 +46,16 @@ function getReviewDate() {
 async function createMovieReview(
   review: MovieReview
 ): Promise<PutCommandOutput> {
-  const commandInput = buildCreateMovieCommandInput(review);
+  const commandInput = buildCreateReviewCommandInput(review);
 
-  const response = await send(commandInput);
+  const response = await sendCreate(commandInput);
 
   console.log("Create response: ", response);
 
   return response;
 }
 
-function buildCreateMovieCommandInput(review: MovieReview): PutCommandInput {
+function buildCreateReviewCommandInput(review: MovieReview): PutCommandInput {
   return {
     TableName: process.env.TABLE_NAME,
     Item: review,

@@ -95,10 +95,10 @@ export class AppApi extends Construct {
       },
     });
 
-    const getReviewsByReviewerNameOrYearFn = new lambdanode.NodejsFunction(this, "getReviewsByReviewerNameOrYearFn", {
+    const getAMoviesReviewsByReviewerNameOrYearFn = new lambdanode.NodejsFunction(this, "getAMoviesReviewsByReviewerNameOrYearFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_18_X,
-      entry: `${__dirname}/../lambdas/getReviewsByReviewerNameOrYear.ts`,
+      entry: `${__dirname}/../lambdas/getAMoviesReviewsByReviewerNameOrYear.ts`,
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
       environment: {
@@ -115,7 +115,7 @@ export class AppApi extends Construct {
       
     // Permissions
     movieReviewsTable.grantReadData(getReviewsByMovieIdFn)
-    movieReviewsTable.grantReadData(getReviewsByReviewerNameOrYearFn)
+    movieReviewsTable.grantReadData(getAMoviesReviewsByReviewerNameOrYearFn)
 
     // REST API
     const appApi = new apig.RestApi(this, "AppApi", {
@@ -136,13 +136,13 @@ export class AppApi extends Construct {
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
     const moviesEndpoint = appApi.root.addResource("movies");
-    const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
-    const reviewsByMovieIdEndpoint = movieIdEndpoint.addResource("reviews");
+    
+      const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
 
-    reviewsByMovieIdEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
+        const reviewsByMovieIdEndpoint = movieIdEndpoint.addResource("reviews");
+          reviewsByMovieIdEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn));
 
-    const reviewsByReviewerNameOrYearEndpoint = reviewsByMovieIdEndpoint.addResource("{reviewerNameOrYear}");
-
-    reviewsByReviewerNameOrYearEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByReviewerNameOrYearFn));
+        const aMoviesReviewsByReviewerNameOrYearEndpoint = reviewsByMovieIdEndpoint.addResource("{reviewerNameOrYear}");
+          aMoviesReviewsByReviewerNameOrYearEndpoint.addMethod("GET", new apig.LambdaIntegration(getAMoviesReviewsByReviewerNameOrYearFn));
   }
 }

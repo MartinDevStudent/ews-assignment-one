@@ -1,10 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { GetCommandInput, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, ServerError } from "../shared/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
-import { sendQuery } from "../shared/dynamoDbHelpers";
+import { getItem, sendQuery } from "../shared/dynamoDbHelpers";
 
 export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
     console.log("Event: ", event);
@@ -23,7 +23,7 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
 
         const movieReviews = year
             ? await getMovieReviewsByYear(movieId, year)
-            : await getMovieReviewsByReviewer(movieId, reviewerName)
+            : await getMovieReviewsByReviewerName(movieId, reviewerName)
 
         if (!movieReviews) {
             const message = year
@@ -41,16 +41,14 @@ export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGat
     }
 };
 
-async function getMovieReviewsByReviewer(movieId: number, reviewerName: string): Promise<MovieReview | undefined> {
-    const commandInput = buildByNameQueryCommandInput(movieId, reviewerName);
+async function getMovieReviewsByReviewerName(movieId: number, reviewerName: string): Promise<MovieReview | undefined> {
+    const commandInput = buildGetItemCommandInput(movieId, reviewerName);
 
-    const queryResponse = await sendQuery(commandInput);
+    const queryResponse = await getItem(commandInput);
 
     console.log("GetCommand response: ", queryResponse);
 
-    return queryResponse.Items && queryResponse.Items.length > 0
-        ? queryResponse.Items[0] as MovieReview
-        : undefined;
+    return queryResponse.Item ? queryResponse.Item as MovieReview : undefined;
 }
 
 async function getMovieReviewsByYear(movieId: number, year: number): Promise<MovieReview[] | undefined> {
@@ -65,12 +63,11 @@ async function getMovieReviewsByYear(movieId: number, year: number): Promise<Mov
         : undefined;
 }
 
-function buildByNameQueryCommandInput(movieId: number, reviewerName: string): QueryCommandInput {
+function buildGetItemCommandInput(movieId: number, reviewerName: string): GetCommandInput {
     return {
         TableName: process.env.TABLE_NAME,
-        KeyConditionExpression: "movieId = :m and reviewerName = :r",
-        ExpressionAttributeValues: { ":m": movieId, ":r": reviewerName }
-    };
+        Key: { movieId: movieId, reviewerName: reviewerName },
+    }
 };
 
 function buildByYearQueryCommandInput(movieId: number, year: number): QueryCommandInput {

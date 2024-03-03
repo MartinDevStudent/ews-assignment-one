@@ -1,5 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, GetCommandInput, GetCommandOutput, QueryCommand, QueryCommandInput, QueryCommandOutput } from "@aws-sdk/lib-dynamodb";
+
+const ddbDocClient = createDDbDocClient(process.env.REGION);
 
 function createDDbDocClient(awsRegion: string | undefined): DynamoDBDocumentClient {
     const ddbClient = new DynamoDBClient({ region: awsRegion });
@@ -16,12 +18,18 @@ function createDDbDocClient(awsRegion: string | undefined): DynamoDBDocumentClie
     return DynamoDBDocumentClient.from(ddbClient, translateConfig);
 }
 
-export async function sendQuery(commandInput: QueryCommandInput) {
-    const ddbDocClient = createDDbDocClient(process.env.REGION);
-
+export async function sendQuery(commandInput: QueryCommandInput): Promise<QueryCommandOutput> {
     const commandOutput = await ddbDocClient.send(
         new QueryCommand(commandInput)
     );
 
+    return commandOutput;
+}
+
+export async function getItem(commandInput: GetCommandInput): Promise<GetCommandOutput> {
+    const commandOutput = await ddbDocClient.send(
+        new GetCommand(commandInput)
+    );
+            
     return commandOutput;
 }

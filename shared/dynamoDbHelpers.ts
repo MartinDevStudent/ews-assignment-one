@@ -4,6 +4,9 @@ import {
   GetCommand,
   GetCommandInput,
   GetCommandOutput,
+  PutCommand,
+  PutCommandInput,
+  PutCommandOutput,
   QueryCommand,
   QueryCommandInput,
   QueryCommandOutput,
@@ -31,26 +34,26 @@ function createDDbDocClient(
   return DynamoDBDocumentClient.from(ddbClient, translateConfig);
 }
 
+export async function send(
+  commandInput: PutCommandInput
+): Promise<PutCommandOutput> {
+  return await ddbDocClient.send(new PutCommand(commandInput));
+}
+
 export async function sendQuery(
   commandInput: QueryCommandInput
 ): Promise<QueryCommandOutput> {
-  const commandOutput = await ddbDocClient.send(new QueryCommand(commandInput));
-
-  return commandOutput;
+  return await ddbDocClient.send(new QueryCommand(commandInput));
 }
 
 export async function getItem(
   commandInput: GetCommandInput
 ): Promise<GetCommandOutput> {
-  const commandOutput = await ddbDocClient.send(new GetCommand(commandInput));
-
-  return commandOutput;
+  return await ddbDocClient.send(new GetCommand(commandInput));
 }
 
 export async function scan(
   commandInput: ScanCommandInput
 ): Promise<ScanCommandOutput> {
-  const commandOutput = await ddbDocClient.send(new ScanCommand(commandInput));
-
-  return commandOutput;
+  return await ddbDocClient.send(new ScanCommand(commandInput));
 }

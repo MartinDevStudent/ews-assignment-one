@@ -8,3 +8,9 @@ export function isValid(typeName: string, objectToValidate: any) {
 
   return isValid(objectToValidate);
 }
+
+export function isValidDate(dateString: string) {
+  const date = new Date(dateString);
+
+  return date.toString() !== "Invalid Date";
+}

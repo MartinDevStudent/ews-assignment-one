@@ -29,3 +29,10 @@ export type MovieReviewsQueryParams = {
 export type TranslationQueryParams = {
   language: string;
 };
+
+export type CreateMovieReviewRequest = {
+  movieId: number;
+  reviewerName: string;
+  content: string;
+  rating: number;
+};

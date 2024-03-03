@@ -28,6 +28,13 @@ export class AppApi extends Construct {
       tableName: "MovieReviews",
     });
 
+    movieReviewsTable.addGlobalSecondaryIndex({
+      partitionKey: {
+          name: 'Id',
+          type: dynamodb.AttributeType.STRING,
+      },
+      indexName: 'some-index',
+  });
     movieReviewsTable.addLocalSecondaryIndex({
       indexName: "reviewDateIx",
       sortKey: { name: "reviewDate", type: dynamodb.AttributeType.STRING },

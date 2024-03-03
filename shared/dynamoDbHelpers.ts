@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, GetCommandInput, GetCommandOutput, QueryCommand, QueryCommandInput, QueryCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, GetCommandInput, GetCommandOutput, QueryCommand, QueryCommandInput, QueryCommandOutput, ScanCommand, ScanCommandInput, ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient(process.env.REGION);
 
@@ -29,6 +29,14 @@ export async function sendQuery(commandInput: QueryCommandInput): Promise<QueryC
 export async function getItem(commandInput: GetCommandInput): Promise<GetCommandOutput> {
     const commandOutput = await ddbDocClient.send(
         new GetCommand(commandInput)
+    );
+            
+    return commandOutput;
+}
+
+export async function scan(commandInput: ScanCommandInput): Promise<ScanCommandOutput> {
+    const commandOutput = await ddbDocClient.send(
+        new ScanCommand(commandInput)
     );
             
     return commandOutput;

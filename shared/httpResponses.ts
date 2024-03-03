@@ -47,3 +47,13 @@ export function SchemaError(schemaDefinition: any): HttpResponse {
         }),
     };
 }
+
+export function BadRequest(message: string): HttpResponse {
+    return {
+        statusCode: 404,
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ Message: message }),
+    };
+}

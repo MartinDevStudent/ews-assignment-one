@@ -10,6 +10,7 @@ import { movieReviews } from "../seed/movieReviews";
 import { generateBatch } from "../shared/util";
 
 import * as iam from "aws-cdk-lib/aws-iam";
+import { NodejsFunctionProps } from "aws-cdk-lib/aws-lambda-nodejs";
 
 type AppApiProps = {
   userPoolId: string;
@@ -70,11 +71,46 @@ export class AppApi extends Construct {
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
       layerVersionName: "custom-code-layer",
       code: lambda.Code.fromAsset("layers/custom-code"),
-      description: "Business logic layer",
+      description: "Custom code layer",
     });
 
+    const nodeModulesLayer = new lambda.LayerVersion(
+      this,
+      "node-modules-layer",
+      {
+        compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+        code: lambda.Code.fromAsset("src/layers/node-modules"),
+        description: "Node modules layer",
+      }
+    );
+
     // Functions
-    const appCommonFnProps = {
+    const appCommonFnProps: NodejsFunctionProps = {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_18_X,
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(10),
+      environment: {
+        TABLE_NAME: movieReviewsTable.tableName,
+        REGION: "eu-west-1",
+      },
+      bundling: {
+        externalModules: [
+          "aws-sdk", // Use the 'aws-sdk' available in the Lambda runtime
+          "aws-lambda",
+          "@aws-sdk/lib-dynamodb",
+          "axios",
+          "jsonwebtoken",
+          "jwk-to-pem",
+          "@aws-sdk/client-dynamodb",
+          "@aws-sdk/util-dynamodb",
+          "ajv",
+        ],
+      },
+      layers: [customCodeLayer, nodeModulesLayer],
+    };
+
+    const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {
       architecture: lambda.Architecture.ARM_64,
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
@@ -85,10 +121,6 @@ export class AppApi extends Construct {
         CLIENT_ID: props.userPoolClientId,
         REGION: cdk.Aws.REGION,
       },
-    };
-
-    const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {
-      ...appCommonFnProps,
       entry: "./lambdas/auth/authorizer.ts",
     });
 
@@ -96,16 +128,8 @@ export class AppApi extends Construct {
       this,
       "GetReviewsByMovieIdFn",
       {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_18_X,
+        ...appCommonFnProps,
         entry: `${__dirname}/../lambdas/getReviewsByMovieId.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: movieReviewsTable.tableName,
-          REGION: "eu-west-1",
-        },
-        layers: [customCodeLayer],
       }
     );
 
@@ -114,16 +138,8 @@ export class AppApi extends Construct {
         this,
         "getAMoviesReviewsByReviewerNameOrYearFn",
         {
-          architecture: lambda.Architecture.ARM_64,
-          runtime: lambda.Runtime.NODEJS_18_X,
+          ...appCommonFnProps,
           entry: `${__dirname}/../lambdas/getAMoviesReviewsByReviewerNameOrYear.ts`,
-          timeout: cdk.Duration.seconds(10),
-          memorySize: 128,
-          environment: {
-            TABLE_NAME: movieReviewsTable.tableName,
-            REGION: "eu-west-1",
-          },
-          layers: [customCodeLayer],
         }
       );
 
@@ -131,16 +147,8 @@ export class AppApi extends Construct {
       this,
       "getReviewersReviewsFn",
       {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_18_X,
+        ...appCommonFnProps,
         entry: `${__dirname}/../lambdas/getReviewersReviews.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: movieReviewsTable.tableName,
-          REGION: "eu-west-1",
-        },
-        layers: [customCodeLayer],
       }
     );
 
@@ -148,43 +156,19 @@ export class AppApi extends Construct {
       this,
       "getTranslationFn",
       {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_18_X,
+        ...appCommonFnProps,
         entry: `${__dirname}/../lambdas/getTranslation.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: movieReviewsTable.tableName,
-          REGION: "eu-west-1",
-        },
-        layers: [customCodeLayer],
       }
     );
 
     const postReviewFn = new lambdanode.NodejsFunction(this, "postReviewFn", {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_18_X,
+      ...appCommonFnProps,
       entry: `${__dirname}/../lambdas/postReview.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: {
-        TABLE_NAME: movieReviewsTable.tableName,
-        REGION: "eu-west-1",
-      },
-      layers: [customCodeLayer],
     });
 
     const putReviewFn = new lambdanode.NodejsFunction(this, "putReviewFn", {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_18_X,
+      ...appCommonFnProps,
       entry: `${__dirname}/../lambdas/putReview.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: {
-        TABLE_NAME: movieReviewsTable.tableName,
-        REGION: "eu-west-1",
-      },
-      layers: [customCodeLayer],
     });
 
     const requestAuthorizer = new apig.RequestAuthorizer(

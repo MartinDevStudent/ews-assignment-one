@@ -1,8 +1,8 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
-import { Ok, SchemaError, ServerError } from "../shared/httpResponses";
+import { Ok, SchemaError, ServerError } from "/opt/custom-code/httpResponses";
 import { isValid } from "../shared/validator";
 
-import schema from "../shared/types.schema.json";
+const schema = require("../shared/types.schema.json");
 import { MovieReview } from "../shared/types";
 import { PutCommandInput, PutCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { sendCreate } from "../shared/dynamoDbHelpers";

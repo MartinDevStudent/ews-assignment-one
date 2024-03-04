@@ -4,10 +4,10 @@ import {
   Ok,
   SchemaError,
   ServerError,
-} from "../shared/httpResponses";
+} from "/opt/custom-code/httpResponses";
 import { isValid } from "../shared/validator";
-import schema from "../shared/types.schema.json";
-import { PutCommandOutput, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
+const schema = require("../shared/types.schema.json");
+import { UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { sendUpdate } from "../shared/dynamoDbHelpers";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { MovieReview } from "../shared/types";

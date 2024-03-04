@@ -9,11 +9,11 @@ import {
   Ok,
   SchemaError,
   ServerError,
-} from "../shared/httpResponses";
+} from "/opt/custom-code/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { getItem } from "../shared/dynamoDbHelpers";
 import { isValid } from "../shared/validator";
-import schema from "../shared/types.schema.json";
+const schema = require("../shared/types.schema.json");
 import {
   TranslateTextRequest,
   TranslateTextResponse,

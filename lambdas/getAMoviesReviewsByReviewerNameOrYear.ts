@@ -2,7 +2,7 @@ import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { GetCommandInput, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
-import { NotFound, Ok, ServerError } from "../shared/httpResponses";
+import { NotFound, Ok, ServerError } from "/opt/custom-code/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { getItem, sendQuery } from "../shared/dynamoDbHelpers";
 

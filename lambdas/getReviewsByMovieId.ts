@@ -7,11 +7,11 @@ import {
   Ok,
   SchemaError,
   ServerError,
-} from "../shared/httpResponses";
+} from "/opt/custom-code/httpResponses";
 import { tryParseInt } from "../shared/parameterHelpers";
 import { sendQuery } from "../shared/dynamoDbHelpers";
 
-import schema from "../shared/types.schema.json";
+const schema = require("../shared/types.schema.json");
 import { isValid } from "../shared/validator";
 
 export const handler: APIGatewayProxyHandlerV2 = async function (

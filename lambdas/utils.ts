@@ -6,8 +6,8 @@ import {
 } from "aws-lambda";
 
 import axios from "axios";
-import jwt from "jsonwebtoken";
-import jwkToPem from "jwk-to-pem";
+const jwt = require("jsonwebtoken");
+const jwkToPem = require("jwk-to-pem");
 
 export type CookieMap = { [key: string]: string } | undefined;
 export type JwtToken = { sub: string; email: string } | null;

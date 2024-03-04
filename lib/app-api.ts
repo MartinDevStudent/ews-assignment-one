@@ -65,6 +65,14 @@ export class AppApi extends Construct {
       }),
     });
 
+    // Layers
+    const customCodeLayer = new lambda.LayerVersion(this, "custom-code-layer", {
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      layerVersionName: "custom-code-layer",
+      code: lambda.Code.fromAsset("layers/custom-code"),
+      description: "Business logic layer",
+    });
+
     // Functions
     const appCommonFnProps = {
       architecture: lambda.Architecture.ARM_64,
@@ -97,6 +105,7 @@ export class AppApi extends Construct {
           TABLE_NAME: movieReviewsTable.tableName,
           REGION: "eu-west-1",
         },
+        layers: [customCodeLayer],
       }
     );
 
@@ -114,6 +123,7 @@ export class AppApi extends Construct {
             TABLE_NAME: movieReviewsTable.tableName,
             REGION: "eu-west-1",
           },
+          layers: [customCodeLayer],
         }
       );
 
@@ -130,6 +140,7 @@ export class AppApi extends Construct {
           TABLE_NAME: movieReviewsTable.tableName,
           REGION: "eu-west-1",
         },
+        layers: [customCodeLayer],
       }
     );
 
@@ -146,6 +157,7 @@ export class AppApi extends Construct {
           TABLE_NAME: movieReviewsTable.tableName,
           REGION: "eu-west-1",
         },
+        layers: [customCodeLayer],
       }
     );
 
@@ -159,6 +171,7 @@ export class AppApi extends Construct {
         TABLE_NAME: movieReviewsTable.tableName,
         REGION: "eu-west-1",
       },
+      layers: [customCodeLayer],
     });
 
     const putReviewFn = new lambdanode.NodejsFunction(this, "putReviewFn", {
@@ -171,6 +184,7 @@ export class AppApi extends Construct {
         TABLE_NAME: movieReviewsTable.tableName,
         REGION: "eu-west-1",
       },
+      layers: [customCodeLayer],
     });
 
     const requestAuthorizer = new apig.RequestAuthorizer(

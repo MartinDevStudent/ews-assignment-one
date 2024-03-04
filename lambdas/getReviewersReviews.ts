@@ -2,49 +2,53 @@ import { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { ScanCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
-import { NotFound, Ok, ServerError } from "../shared/httpResponses";
+import { NotFound, Ok, ServerError } from "/opt/custom-code/httpResponses";
 import { scan } from "../shared/dynamoDbHelpers";
 
-export const handler : APIGatewayProxyHandlerV2  = async function (event: APIGatewayProxyEventV2) {
-    console.log("Event: ", event);
+export const handler: APIGatewayProxyHandlerV2 = async function (
+  event: APIGatewayProxyEventV2
+) {
+  console.log("Event: ", event);
 
-    try {
-        const reviewerName = event?.pathParameters?.reviewerName;
+  try {
+    const reviewerName = event?.pathParameters?.reviewerName;
 
-        if (!reviewerName) {
-            return NotFound("Missing reviewer name");
-        }
-
-        const movieReviews = await getMovieReviews(reviewerName);
-
-        if (!movieReviews) {
-            return NotFound("No movie reviews found for reviewer");
-        }
-      
-        return Ok(movieReviews);
-    } catch (error: any) {
-        console.log(JSON.stringify(error));
-
-        return ServerError(error);
+    if (!reviewerName) {
+      return NotFound("Missing reviewer name");
     }
+
+    const movieReviews = await getMovieReviews(reviewerName);
+
+    if (!movieReviews) {
+      return NotFound("No movie reviews found for reviewer");
+    }
+
+    return Ok(movieReviews);
+  } catch (error: any) {
+    console.log(JSON.stringify(error));
+
+    return ServerError(error);
+  }
 };
 
-async function getMovieReviews(reviewerName: string): Promise<MovieReview[] | undefined> {
-    const commandInput = buildScanCommandInput(reviewerName);
-    
-    const scanResponse = await scan(commandInput);
+async function getMovieReviews(
+  reviewerName: string
+): Promise<MovieReview[] | undefined> {
+  const commandInput = buildScanCommandInput(reviewerName);
 
-    console.log("GetCommand response: ", scanResponse);
+  const scanResponse = await scan(commandInput);
 
-    return scanResponse.Items && scanResponse.Items.length > 0
-        ? scanResponse.Items as MovieReview[]
-        : undefined;
+  console.log("GetCommand response: ", scanResponse);
+
+  return scanResponse.Items && scanResponse.Items.length > 0
+    ? (scanResponse.Items as MovieReview[])
+    : undefined;
 }
 
 function buildScanCommandInput(reviewerName: string): ScanCommandInput {
-    return {
-        TableName: process.env.TABLE_NAME,
-        FilterExpression: "reviewerName = :r",
-        ExpressionAttributeValues: { ":r": reviewerName }
-    };
-};
+  return {
+    TableName: process.env.TABLE_NAME,
+    FilterExpression: "reviewerName = :r",
+    ExpressionAttributeValues: { ":r": reviewerName },
+  };
+}

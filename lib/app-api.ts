@@ -79,16 +79,6 @@ export class AppApi extends Construct {
       },
     };
 
-    const protectedFn = new node.NodejsFunction(this, "ProtectedFn", {
-      ...appCommonFnProps,
-      entry: "./lambdas/protected.ts",
-    });
-
-    const publicFn = new node.NodejsFunction(this, "PublicFn", {
-      ...appCommonFnProps,
-      entry: "./lambdas/public.ts",
-    });
-
     const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {
       ...appCommonFnProps,
       entry: "./lambdas/auth/authorizer.ts",
@@ -223,15 +213,6 @@ export class AppApi extends Construct {
         allowOrigins: apig.Cors.ALL_ORIGINS,
       },
     });
-
-    const protectedRes = appApi.root.addResource("protected");
-    protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
-      authorizer: requestAuthorizer,
-      authorizationType: apig.AuthorizationType.CUSTOM,
-    });
-
-    const publicRes = appApi.root.addResource("public");
-    publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
     const moviesEndpoint = appApi.root.addResource("movies");
     moviesEndpoint.addMethod("POST", new apig.LambdaIntegration(postReviewFn), {

@@ -8,7 +8,7 @@ import {
   SchemaError,
   ServerError,
 } from "/opt/custom-code/httpResponses";
-import { tryParseInt } from "../shared/parameterHelpers";
+import { tryParseInt } from "/opt/custom-code/parameterHelpers";
 import { sendQuery } from "../shared/dynamoDbHelpers";
 
 const schema = require("../shared/types.schema.json");

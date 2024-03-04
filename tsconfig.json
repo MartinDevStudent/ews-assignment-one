@@ -20,7 +20,10 @@
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": "./",
     "paths": {
-      "/opt/custom-code/httpResponses": ["layers/custom-code/httpResponses"]
+      "/opt/custom-code/httpResponses": ["layers/custom-code/httpResponses"],
+      "/opt/custom-code/parameterHelpers": [
+        "layers/custom-code/parameterHelpers"
+      ]
     },
     "resolveJsonModule": true
   },

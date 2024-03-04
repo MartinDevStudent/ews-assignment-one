@@ -3,7 +3,7 @@ import { GetCommandInput, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 
 import { MovieReview } from "../shared/types";
 import { NotFound, Ok, ServerError } from "/opt/custom-code/httpResponses";
-import { tryParseInt } from "../shared/parameterHelpers";
+import { tryParseInt } from "/opt/custom-code/parameterHelpers";
 import { getItem, sendQuery } from "../shared/dynamoDbHelpers";
 
 export const handler: APIGatewayProxyHandlerV2 = async function (

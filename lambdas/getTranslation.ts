@@ -10,7 +10,7 @@ import {
   SchemaError,
   ServerError,
 } from "/opt/custom-code/httpResponses";
-import { tryParseInt } from "../shared/parameterHelpers";
+import { tryParseInt } from "/opt/custom-code/parameterHelpers";
 import { getItem } from "../shared/dynamoDbHelpers";
 import { isValid } from "../shared/validator";
 const schema = require("../shared/types.schema.json");

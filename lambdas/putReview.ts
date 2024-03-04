@@ -9,7 +9,7 @@ import { isValid } from "../shared/validator";
 const schema = require("../shared/types.schema.json");
 import { UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { sendUpdate } from "../shared/dynamoDbHelpers";
-import { tryParseInt } from "../shared/parameterHelpers";
+import { tryParseInt } from "/opt/custom-code/parameterHelpers";
 import { MovieReview } from "../shared/types";
 
 export const handler: APIGatewayProxyHandlerV2 = async function (

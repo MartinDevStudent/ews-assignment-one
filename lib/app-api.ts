@@ -234,7 +234,10 @@ export class AppApi extends Construct {
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
     const moviesEndpoint = appApi.root.addResource("movies");
-    moviesEndpoint.addMethod("POST", new apig.LambdaIntegration(postReviewFn));
+    moviesEndpoint.addMethod("POST", new apig.LambdaIntegration(postReviewFn), {
+      authorizer: requestAuthorizer,
+      authorizationType: apig.AuthorizationType.CUSTOM,
+    });
 
     const movieIdEndpoint = moviesEndpoint.addResource("{movieId}");
 
@@ -252,7 +255,11 @@ export class AppApi extends Construct {
     );
     aMoviesReviewsByReviewerNameOrYearEndpoint.addMethod(
       "PUT",
-      new apig.LambdaIntegration(putReviewFn)
+      new apig.LambdaIntegration(putReviewFn),
+      {
+        authorizer: requestAuthorizer,
+        authorizationType: apig.AuthorizationType.CUSTOM,
+      }
     );
 
     const reviewsEndpoint = appApi.root.addResource("reviews");

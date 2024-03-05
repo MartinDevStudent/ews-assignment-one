@@ -74,12 +74,12 @@ export class AppApi extends Construct {
       description: "Custom code layer",
     });
 
-    const nodeModulesLayer = new lambda.LayerVersion(
+    const dependenciesLayer = new lambda.LayerVersion(
       this,
-      "node-modules-layer",
+      "dependencies-layer",
       {
         compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
-        code: lambda.Code.fromAsset("layers/node-modules"),
+        code: lambda.Code.fromAsset("layers/dependencies"),
         description: "Node modules layer",
       }
     );
@@ -103,7 +103,7 @@ export class AppApi extends Construct {
           "ajv",
         ],
       },
-      layers: [customCodeLayer, nodeModulesLayer],
+      layers: [customCodeLayer, dependenciesLayer],
     };
 
     const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {

@@ -79,7 +79,7 @@ export class AppApi extends Construct {
       "node-modules-layer",
       {
         compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
-        code: lambda.Code.fromAsset("src/layers/node-modules"),
+        code: lambda.Code.fromAsset("layers/node-modules"),
         description: "Node modules layer",
       }
     );
@@ -97,13 +97,9 @@ export class AppApi extends Construct {
       bundling: {
         externalModules: [
           "aws-sdk", // Use the 'aws-sdk' available in the Lambda runtime
-          "aws-lambda",
-          "@aws-sdk/lib-dynamodb",
           "axios",
           "jsonwebtoken",
           "jwk-to-pem",
-          "@aws-sdk/client-dynamodb",
-          "@aws-sdk/util-dynamodb",
           "ajv",
         ],
       },

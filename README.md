@@ -26,8 +26,6 @@ This repository contains an implementation of a serverless REST API for the AWS 
 
 ### Independent learning.
 
-[ Briefly explain any aspects of your submission that required independent research and learning, i.e. typically related to the higher grade bands. State the source files that have evidence of this.
-
-- Lamdbd layers (node modules) - made lambda layers for node modules (see lib/app-api.ts line 77/97)
-- Lamdbd layers (custom code) - made lambda layer for some custom code ( see lib/app-api.ts line 70, custom code was httpResponses.ts and parameter layer)
+- Lamdbd layers (node modules) - made lambda layer for node modules (see app-api.ts, line 77/97)
+- Lamdbd layers (custom code) - made lambda layer for some shared custom code (see app-api.ts line 70, custom code was httpResponses.ts and parameterHelpers.ts)
 - To deploy the node modules lambda layers I had to use the AWS IDE to deploy/get the linux dependencies for adding to the custom layer
